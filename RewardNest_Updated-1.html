@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RewardNest - Earn & Withdraw Rewards</title>
+  
+  <!-- Monetag Official In-Page SDK Integration -->
+  <script src="//libtl.com/sdk.js" data-zone="11710247" data-sdk="show_11710247"></script>
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Firebase App & Services (v9 Compat for standalone compatibility) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-dark: #3730A3;
+      --primary-light: #EEF2FF;
+      --accent: #10B981;
+      --accent-dark: #059669;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --dark: #0F172A;
+      --gray-800: #1E293B;
+      --gray-700: #334155;
+      --gray-500: #64748B;
+      --gray-200: #E2E8F0;
+      --gray-100: #F1F5F9;
+      --white: #FFFFFF;
+      --gold: #FBBF24;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: #F8FAFC;
+      color: var(--dark);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    #app-container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 0 40px rgba(0,0,0,0.05);
+      padding-bottom: 84px;
+    }
+
+    /* Header */
+    header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 20px;
+      font-family: 'Outfit', sans-serif;
+      box-shadow: 0 4px 8px rgba(79,70,229,0.25);
+    }
+
+    .brand-text h1 {
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      color: var(--dark);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-text span {
+      color: var(--primary);
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--gray-100);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    .online-indicator {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Main Scroll Area */
+    main {
+      flex: 1;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Balance Dashboard Card */
+    .balance-card {
+      background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      color: #FFFFFF;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(49, 46, 129, 0.4);
+    }
+
+    .balance-card::after {
+      content: '';
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
+      top: -40px;
+      right: -30px;
+      border-radius: 50%;
+    }
+
+    .balance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .balance-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #A5B4FC;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .sync-status {
+      font-size: 11px;
+      color: #C7D2FE;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.1);
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+
+    .balance-val-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .balance-amount {
+      font-size: 38px;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      line-height: 1;
+      letter-spacing: -1px;
+      color: #FFFFFF;
+    }
+
+    .balance-unit {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .inr-equivalent {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #F8FAFC;
+    }
+
+    .inr-equivalent span {
+      color: #34D399;
+      margin-left: 4px;
+      font-weight: 700;
+    }
+
+    /* Fast Action Navigation Cards */
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--dark);
+      margin: 4px 0 10px 4px;
+      font-family: 'Outfit', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .action-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .action-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+
+    .action-card:active {
+      transform: scale(0.98);
+    }
+
+    .card-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .card-watch .card-icon-box { background: #FEF3C7; color: #D97706; }
+    .card-withdraw .card-icon-box { background: #DCFCE7; color: #15803D; }
+    .card-refer .card-icon-box { background: #EDE9FE; color: #6D28D9; }
+    .card-followers .card-icon-box { background: #E0E7FF; color: #4338CA; }
+
+    .card-content h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 2px;
+      letter-spacing: -0.2px;
+    }
+
+    .card-content p {
+      font-size: 11px;
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+
+    .card-badge-gold { background: #FEF3C7; color: #B45309; }
+    .card-badge-green { background: #DCFCE7; color: #166534; }
+    .card-badge-purple { background: #F3E8FF; color: #7E22CE; }
+
+    /* Tab Page Views */
+    .view-page {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .view-page.active-view {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card Panels inside pages */
+    .content-box {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      padding: 18px;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .content-box-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Watch Section Specifics */
+    .watch-hero {
+      text-align: center;
+      padding: 28px 16px;
+      background: linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%);
+      border-radius: var(--radius);
+      border: 1.5px dashed #CBD5E1;
+    }
+
+    .watch-icon-lg {
+      font-size: 52px;
+      margin-bottom: 10px;
+      display: inline-block;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+
+    .watch-hero h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .watch-hero p {
+      font-size: 13px;
+      color: var(--gray-500);
+      max-width: 280px;
+      margin: 0 auto 18px;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 13px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      outline: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #FFFFFF;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      background: #A5B4FC;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-200);
+    }
+
+    .btn-telegram {
+      background: #0088CC;
+      color: #FFFFFF;
+      box-shadow: 0 4px 10px rgba(0, 136, 204, 0.25);
+    }
+
+    .btn-telegram:hover {
+      background: #0077B5;
+    }
+
+    .btn-youtube {
+      background: #FF0000;
+      color: #FFFFFF;
+      box-shadow: 0 4px 10px rgba(255, 0, 0, 0.25);
+    }
+
+    .btn-youtube:hover {
+      background: #CC0000;
+    }
+
+    .btn-outline {
+      border: 1.5px solid var(--gray-200);
+      background: #FFFFFF;
+      color: var(--gray-700);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Form Elements */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      color: var(--dark);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+
+    /* Quick Preset Chips for Withdrawal */
+    .preset-chips {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip-btn {
+      padding: 6px 12px;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--gray-700);
+      transition: all 0.15s;
+    }
+
+    .chip-btn:hover, .chip-btn.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Follower Social Tasks */
+    .task-card {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 12px;
+      background: #FAFAFA;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .task-platform {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .task-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #FFFFFF;
+    }
+
+    .task-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .task-sub {
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+
+    .task-reward-pill {
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 12px;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Referral Box */
+    .referral-box {
+      background: #F8FAFC;
+      border: 1.5px dashed var(--primary);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .referral-code-display {
+      font-family: monospace;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--primary);
+      margin: 6px 0;
+    }
+
+    .share-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    /* Notice & Notes */
+    .info-callout {
+      background: #EFF6FF;
+      border-left: 4px solid var(--primary);
+      padding: 12px 14px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 12px;
+      color: #1E40AF;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    .warning-callout {
+      background: #FFFBEB;
+      border-left: 4px solid var(--warning);
+      padding: 12px 14px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 12px;
+      color: #92400E;
+      line-height: 1.4;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 10px;
+      z-index: 50;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.03);
+    }
+
+    .bottom-nav{overflow-x:auto}
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-500);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 7px;
+      min-width: 64px;
+      transition: all 0.15s ease-in-out;
+      border-radius: 8px;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Toast Notification Banner */
+    #toast-banner {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      width: 90%;
+      max-width: 420px;
+      background: #1E293B;
+      color: #FFFFFF;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+
+    #toast-banner.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-icon {
+      font-size: 18px;
+    }
+
+    /* Activity History List */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #F8FAFC;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .history-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .history-desc {
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .history-time {
+      font-size: 10px;
+      color: var(--gray-500);
+    }
+
+    .history-amount {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .history-amount.credit {
+      color: var(--accent-dark);
+    }
+
+    .history-amount.debit {
+      color: var(--danger);
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .login-screen{position:fixed;inset:0;background:linear-gradient(145deg,#0f172a,#312e81);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999}
+    .login-screen.hidden{display:none}
+    .login-card{width:100%;max-width:390px;background:#fff;border-radius:22px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+    .login-logo{width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font:800 30px Outfit,sans-serif;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+    .login-card h2{text-align:center;font:800 24px Outfit,sans-serif;margin-bottom:6px}.login-card>p{text-align:center;color:#64748b;font-size:13px;margin-bottom:20px}
+    .login-note{font-size:11px;color:#64748b;background:#f1f5f9;border-radius:10px;padding:10px;margin-top:12px;line-height:1.45}
+    .login-error{color:#dc2626;font-size:12px;text-align:center;margin-top:10px;min-height:16px}
+    .feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.feature-card{border:1px solid #e2e8f0;border-radius:14px;padding:14px;background:#fff;box-shadow:var(--shadow-sm)}.feature-card .emoji{font-size:26px}.feature-card h4{font-size:14px;margin:6px 0 2px}.feature-card p{font-size:11px;color:#64748b;margin-bottom:8px}.feature-card button{width:100%;border:0;border-radius:9px;padding:8px;background:#4f46e5;color:#fff;font-weight:700;font-size:11px}.feature-card button:disabled{opacity:.5}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.62);display:none;align-items:flex-end;justify-content:center;z-index:8000;padding:12px}.modal-backdrop.show{display:flex}.reward-modal{width:100%;max-width:480px;background:#fff;border-radius:20px;padding:18px;max-height:88vh;overflow:auto}.reward-modal h3{font:800 20px Outfit,sans-serif;margin-bottom:6px}.reward-modal .close{float:right;border:0;background:#f1f5f9;border-radius:50%;width:32px;height:32px}.question-option{width:100%;padding:11px;margin-top:8px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;text-align:left}.question-option.correct{background:#dcfce7;border-color:#22c55e}.question-option.wrong{background:#fee2e2;border-color:#ef4444}.wheel{width:240px;height:240px;border-radius:50%;margin:15px auto;background:conic-gradient(#4f46e5 0 20deg,#fbbf24 20deg 40deg,#10b981 40deg 60deg,#ef4444 60deg 80deg,#7c3aed 80deg 100deg,#f59e0b 100deg 120deg,#06b6d4 120deg 140deg,#ec4899 140deg 160deg,#84cc16 160deg 180deg,#4f46e5 180deg 200deg,#fbbf24 200deg 220deg,#10b981 220deg 240deg,#ef4444 240deg 260deg,#7c3aed 260deg 280deg,#f59e0b 280deg 300deg,#06b6d4 300deg 320deg,#ec4899 320deg 340deg,#84cc16 340deg 360deg);transition:transform 3s cubic-bezier(.15,.8,.15,1);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 25px rgba(0,0,0,.18)}.wheel-center{width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}.scratch-box{height:140px;border-radius:16px;background:linear-gradient(135deg,#64748b,#94a3b8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;cursor:pointer;margin:12px 0}.scratch-box.revealed{background:linear-gradient(135deg,#10b981,#059669)}
+  </style>
+</head>
+<body>
+
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">R</div>
+      <h2>Welcome to RewardNest</h2>
+      <p>Enter your RewardNest ID and password to continue.</p>
+      <div class="form-group">
+        <label class="form-label">RewardNest ID</label>
+        <input id="rn-login-id" class="form-input" inputmode="numeric" maxlength="12" placeholder="e.g. 482731" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="rn-login-password" class="form-input" type="password" minlength="4" placeholder="Enter password" autocomplete="current-password">
+      </div>
+      <button id="rn-login-btn" class="btn btn-primary">Login / Continue</button>
+      <div class="login-note">Your ID is only a RewardNest identification number. Login credentials are not created through Firebase Authentication.</div>
+      <div id="rn-login-error" class="login-error"></div>
+    </div>
+  </div>
+
+
+  <div id="app-container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-logo">R</div>
+        <div class="brand-text">
+          <h1>Reward<span>Nest</span></h1>
+        </div>
+      </div>
+      <div class="user-badge" id="uid-pill" title="User Session Identifier">
+        <div class="online-indicator"></div>
+        <span id="uid-short">User: ...</span>
+      </div>
+    </header>
+
+    <!-- Main Views Area -->
+    <main>
+
+      <!-- Balance Card (Always Visible for Context) -->
+      <section class="balance-card">
+        <div class="balance-header">
+          <div class="balance-label">Total Reward Balance</div>
+          <div class="sync-status" id="cloud-sync-status">
+            <span>●</span> Cloud Synced
+          </div>
+        </div>
+        <div class="balance-val-row">
+          <div class="balance-amount" id="coin-counter">0</div>
+          <div class="balance-unit">COINS</div>
+        </div>
+        <div class="inr-equivalent">
+          Estimated Value: &nbsp;<strong id="inr-counter">₹0.00</strong>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- VIEW 1: HOME DASHBOARD                         -->
+      <!-- ============================================== -->
+      <div id="view-home" class="view-page active-view">
+        <div class="section-title">
+          <span>Earning Centers</span>
+          <span style="font-size: 11px; color: var(--primary); font-weight: 600;">Fast Payouts</span>
+        </div>
+
+        <div class="action-grid">
+          <!-- Watch Card -->
+          <div class="action-card card-watch" id="home-card-watch">
+            <span class="card-badge card-badge-gold">+10 Coins</span>
+            <div class="card-icon-box">📺</div>
+            <div class="card-content">
+              <h3>Watch Ads</h3>
+              <p>Monetag ad rewards</p>
+            </div>
+          </div>
+
+          <!-- Withdraw Card -->
+          <div class="action-card card-withdraw" id="home-card-withdraw">
+            <span class="card-badge card-badge-green">Fast UPI</span>
+            <div class="card-icon-box">💸</div>
+            <div class="card-content">
+              <h3>Withdraw</h3>
+              <p>Min 2500 Coins (₹25)</p>
+            </div>
+          </div>
+
+          <!-- Refer Card -->
+          <div class="action-card card-refer" id="home-card-refer">
+            <span class="card-badge card-badge-purple">+10 Coins</span>
+            <div class="card-icon-box">🤝</div>
+            <div class="card-content">
+              <h3>Refer & Earn</h3>
+              <p>Invite your friends</p>
+            </div>
+          </div>
+
+          <!-- Follower Tasks Card -->
+          <div class="action-card card-followers" id="home-card-followers">
+            <span class="card-badge card-badge-gold">+20 Coins</span>
+            <div class="card-icon-box">⭐</div>
+            <div class="card-content">
+              <h3>Followers</h3>
+              <p>YouTube & Telegram</p>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="content-box">
+          <div class="content-box-title"><span>🎁</span> Daily Rewards</div>
+          <div class="feature-grid">
+            <div class="feature-card" id="home-card-checkin"><div class="emoji">🔥</div><h4>Check-In</h4><p id="checkin-status">Daily streak reward</p><button type="button">Open</button></div>
+            <div class="feature-card" id="home-card-spin"><div class="emoji">🎡</div><h4>Spin & Win</h4><p><span id="spin-left">15</span>/15 spins today</p><button type="button">Open</button></div>
+            <div class="feature-card" id="home-card-scratch"><div class="emoji">🎟️</div><h4>Scratch Card</h4><p><span id="scratch-left">10</span>/10 today</p><button type="button">Open</button></div>
+            <div class="feature-card" id="home-card-math"><div class="emoji">🧮</div><h4>Daily Math</h4><p><span id="math-left">50</span>/50 questions</p><button type="button">Open</button></div>
+            <div class="feature-card" id="home-card-quiz"><div class="emoji">🧠</div><h4>Quiz & Earn</h4><p>General knowledge</p><button type="button">Open</button></div>
+            <div class="feature-card" id="home-card-mission"><div class="emoji">🎯</div><h4>Daily Mission</h4><p id="mission-status">Complete activities</p><button type="button">Open</button></div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="content-box" style="margin-top: 6px;">
+          <div class="content-box-title">
+            <span>📋</span> Recent Account Activity
+          </div>
+          <div class="history-list" id="activity-log-list">
+            <div class="history-item">
+              <div class="history-left">
+                <span class="history-desc">Welcome Bonus</span>
+                <span class="history-time">RewardNest Activation</span>
+              </div>
+              <span class="history-amount credit">+10 Coins</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- VIEW 2: WATCH SECTION                          -->
+      <!-- ============================================== -->
+      <div id="view-watch" class="view-page">
+        <div class="watch-hero">
+          <div class="watch-icon-lg">🎬</div>
+          <h2>Watch Sponsored Ads</h2>
+          <p>Watch full ads from official Monetag sponsors and earn 10 Coins instantly into your balance.</p>
+          <button type="button" class="btn btn-primary" id="btn-watch-ad">
+            <span id="btn-watch-spinner" style="display:none;" class="spinner"></span>
+            <span id="btn-watch-text">▶ Watch Monetag Ad (+10 Coins)</span>
+          </button>
+        </div>
+
+        <div class="info-callout">
+          <strong>Ad Guidelines:</strong> Official Monetag ad zones are utilized. If no ad is currently available in your region, cooldown rules apply. Coins are granted only upon ad completion.
+        </div>
+
+        <div class="content-box">
+          <div class="content-box-title">Watch Stats</div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--gray-200);">
+            <span style="color: var(--gray-500);">Completed Today</span>
+            <strong id="watch-count-today">0 Ads</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0;">
+            <span style="color: var(--gray-500);">Earnings Today</span>
+            <strong style="color: var(--accent-dark);" id="watch-earnings-today">0 Coins</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- VIEW 3: WITHDRAW SECTION                       -->
+      <!-- ============================================== -->
+      <div id="view-withdraw" class="view-page">
+        <div class="content-box">
+          <div class="content-box-title">
+            <span>💳</span> Withdraw Funds via UPI
+          </div>
+
+          <div class="info-callout">
+            Conversion Rate: <strong>1000 Coins = ₹10</strong><br>
+            Minimum Threshold: <strong>2500 Coins (₹25)</strong> (Multiples of 500 Coins)
+          </div>
+
+          <form id="withdraw-form" onsubmit="return false;">
+            <div class="form-group">
+              <label class="form-label" for="withdraw-upi">Your UPI ID (VPA)</label>
+              <input type="text" id="withdraw-upi" class="form-input" placeholder="e.g. yourname@okaxis or 9876543210@paytm" autocomplete="off">
+              <span class="input-hint">Must be a valid active UPI address</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="withdraw-coins">Coins to Redeem</label>
+              <input type="number" id="withdraw-coins" class="form-input" placeholder="Minimum 2500" step="500" min="2500">
+              <div class="preset-chips">
+                <button type="button" class="chip-btn" data-coins="2500">2500 (₹25)</button>
+                <button type="button" class="chip-btn" data-coins="5000">5000 (₹50)</button>
+                <button type="button" class="chip-btn" data-coins="10000">10000 (₹100)</button>
+                <button type="button" class="chip-btn" data-coins="20000">20000 (₹200)</button>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600;">
+                <span>Payout Amount:</span>
+                <span id="withdraw-calc-inr" style="color: var(--accent-dark); font-size: 15px;">₹0.00</span>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="btn-submit-withdraw">
+              <span id="withdraw-spinner" style="display:none;" class="spinner"></span>
+              <span id="withdraw-btn-text">Submit Withdrawal Request</span>
+            </button>
+          </form>
+        </div>
+
+        <div class="warning-callout">
+          Withdrawal requests are safely queued in the Firebase cloud database. Private payment details remain strictly confidential and are never shared publicly.
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- VIEW 4: REFER & EARN SECTION                   -->
+      <!-- ============================================== -->
+      <div id="view-refer" class="view-page">
+        <div class="content-box">
+          <div class="content-box-title">
+            <span>🎁</span> Invite Friends & Earn Coins
+          </div>
+          <p style="font-size: 13px; color: var(--gray-500); line-height: 1.4;">
+            Share your unique referral code with friends. For every eligible friend who registers on RewardNest with your code, you receive <strong>100 Coins</strong>.
+          </p>
+
+          <div class="referral-box">
+            <div style="font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase;">Your Exclusive Referral Code</div>
+            <div class="referral-code-display" id="display-ref-code">RN-XXXXXX</div>
+            <div style="font-size: 11px; color: var(--gray-500);">Referral reward: 100 Coins per qualified user</div>
+          </div>
+
+          <div class="share-row">
+            <button type="button" class="btn btn-outline" id="btn-copy-ref">📋 Copy Code</button>
+            <button type="button" class="btn btn-primary" id="btn-share-ref">🚀 Share Link</button>
+          </div>
+        </div>
+
+        <!-- Apply Referral Code Box -->
+        <div class="content-box">
+          <div class="content-box-title">
+            <span>🎟</span> Have a Friend's Referral Code?
+          </div>
+          <div id="ref-claim-container">
+            <div class="form-group">
+              <input type="text" id="input-claim-ref" class="form-input" placeholder="Enter Referral Code (e.g. RN-1234AB)" maxlength="16" style="text-transform: uppercase;">
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-apply-ref">Apply Referral Code</button>
+          </div>
+          <div id="ref-claimed-msg" style="display:none; font-size: 13px; color: var(--accent-dark); font-weight: 600;">
+            ✓ Referral bonus already claimed!
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- VIEW 5: FOLLOWERS SECTION                      -->
+      <!-- ============================================== -->
+      <div id="view-followers" class="view-page">
+        <div class="section-title">Social Tasks</div>
+        
+        <div class="warning-callout" style="margin-bottom: 8px;">
+          Note: Action verification is currently queued for backend API validation. Complete the task honestly to retain your coins.
+        </div>
+
+        <!-- YouTube Task -->
+        <div class="task-card">
+          <div class="task-header">
+            <div class="task-platform">
+              <div class="task-icon" style="background: #FF0000;">▶</div>
+              <div>
+                <div class="task-title">Subscribe YouTube Channel</div>
+                <div class="task-sub">Follow official channel</div>
+              </div>
+            </div>
+            <span class="task-reward-pill">+10 Coins</span>
+          </div>
+          <div class="task-actions">
+            <a href="https://youtube.com/channel/UCj9Lgb5Dc8H41vabX5wuEFA?si=YRbtjG1-ykICuxr8" target="_blank" rel="noopener noreferrer" class="btn btn-youtube" style="flex: 1;" id="btn-open-youtube">
+              Open Channel
+            </a>
+            <button type="button" class="btn btn-secondary" style="flex: 1;" id="btn-claim-youtube">
+              Claim 10 Coins
+            </button>
+          </div>
+        </div>
+
+        <!-- Telegram Task -->
+        <div class="task-card">
+          <div class="task-header">
+            <div class="task-platform">
+              <div class="task-icon" style="background: #0088CC;">✈</div>
+              <div>
+                <div class="task-title">Join Telegram Channel</div>
+                <div class="task-sub">@DailyfreeRozgar</div>
+              </div>
+            </div>
+            <span class="task-reward-pill">+10 Coins</span>
+          </div>
+          <div class="task-actions">
+            <a href="https://t.me/DailyfreeRozgar" target="_blank" rel="noopener noreferrer" class="btn btn-telegram" style="flex: 1;" id="btn-open-telegram">
+              Open Telegram
+            </a>
+            <button type="button" class="btn btn-secondary" style="flex: 1;" id="btn-claim-telegram">
+              Claim 10 Coins
+            </button>
+          </div>
+        </div>
+        <div class="task-card">
+          <div class="task-header">
+            <div class="task-platform">
+              <div class="task-icon" style="background: #0088CC;">✈</div>
+              <div>
+                <div class="task-title">Join RewardNest Community</div>
+                <div class="task-sub">RewardNest Telegram Community</div>
+              </div>
+            </div>
+            <span class="task-reward-pill">+10 Coins</span>
+          </div>
+          <div class="task-actions">
+            <a href="https://t.me/+cW3ZZD1OnUQ4M2Y1" target="_blank" rel="noopener noreferrer" class="btn btn-telegram" style="flex: 1;" id="btn-open-telegram-2">
+              Open Telegram
+            </a>
+            <button type="button" class="btn btn-secondary" style="flex: 1;" id="btn-claim-telegram-2">
+              Claim 10 Coins
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- SEPARATE FEATURE SCREENS                      -->
+      <!-- ============================================== -->
+      <div id="view-checkin" class="view-page feature-page">
+        <div class="feature-header"><button class="back-btn" data-back-home>← Home</button><strong>Daily Check-In</strong></div>
+        <div class="feature-panel">
+          <div class="feature-big-icon">🔥</div><h2>Daily Check-In</h2><div class="sub">Build your streak and collect your daily reward.</div>
+          <div id="checkin-streak-box" class="pending-reward show">Current streak: <span id="checkin-streak-value">0</span> days</div>
+          <button class="btn btn-primary claim-btn" id="btn-checkin" disabled>Claim Check-In Reward</button>
+          <div class="feature-note">First a rewarded ad will open. After the ad is completed, this screen becomes available for the claim.</div>
+        </div>
+      </div>
+
+      <div id="view-spin" class="view-page feature-page">
+        <div class="feature-header"><button class="back-btn" data-back-home>← Home</button><strong>Spin & Win</strong></div>
+        <div class="feature-panel">
+          <div class="feature-big-icon">🎡</div><h2>Spin & Win</h2><div class="sub">15 spins per day • Reward 5–30 coins</div>
+          <div id="spin-prestart" class="pending-reward show">Tap the button to watch the ad and unlock your spin.</div>
+          <button class="btn btn-primary" id="btn-spin-ad">▶ Watch Ad & Unlock Spin</button>
+          <div id="spin-game" style="display:none"><div class="spin-wheel-wrap"><div class="wheel" id="feature-wheel"><div class="wheel-center">SPIN</div></div></div><p style="text-align:center">Result: <b id="spin-result">Ready</b></p><button class="btn btn-primary" id="btn-spin-play">SPIN NOW</button><button class="btn btn-secondary claim-btn" id="btn-spin-claim" disabled>Claim Coins</button></div>
+        </div>
+      </div>
+
+      <div id="view-scratch" class="view-page feature-page">
+        <div class="feature-header"><button class="back-btn" data-back-home>← Home</button><strong>Scratch Card</strong></div>
+        <div class="feature-panel">
+          <div class="feature-big-icon">🎟️</div><h2>Daily Scratch Card</h2><div class="sub">10 scratches per day</div>
+          <div id="scratch-prestart" class="pending-reward show">Watch the ad first to unlock your scratch card.</div>
+          <button class="btn btn-primary" id="btn-scratch-ad">▶ Watch Ad & Unlock Scratch</button>
+          <div id="scratch-game" style="display:none"><div class="scratch-box" id="feature-scratch-box">TAP TO SCRATCH</div><p style="text-align:center" id="scratch-result">Scratch the card to reveal your reward.</p><button class="btn btn-secondary claim-btn" id="btn-scratch-claim" disabled>Claim Coins</button></div>
+        </div>
+      </div>
+
+      <div id="view-math" class="view-page feature-page">
+        <div class="feature-header"><button class="back-btn" data-back-home>← Home</button><strong>Daily Math</strong></div>
+        <div class="feature-panel">
+          <div class="feature-big-icon">🧮</div><h2>Daily Math</h2><div class="sub">50 questions per day</div>
+          <div id="math-prestart" class="pending-reward show">Watch the ad first to unlock today's question.</div>
+          <button class="btn btn-primary" id="btn-math-ad">▶ Watch Ad & Unlock Math</button>
+          <div id="math-game" style="display:none"><div class="math-question" id="feature-math-question"></div><input id="feature-math-answer" class="form-input" inputmode="numeric" placeholder="Enter your answer"><button class="btn btn-primary" id="btn-math-submit" style="margin-top:10px">Submit Answer</button><p id="feature-math-result" style="text-align:center"></p><button class="btn btn-secondary claim-btn" id="btn-math-claim" disabled>Claim Coins</button></div>
+        </div>
+      </div>
+
+      <div id="view-quiz" class="view-page feature-page">
+        <div class="feature-header"><button class="back-btn" data-back-home>← Home</button><strong>Quiz & Earn</strong></div>
+        <div class="feature-panel">
+          <div class="feature-big-icon">🧠</div><h2>Quiz & Earn</h2><div class="sub">Answer correctly and collect your reward.</div>
+          <div id="quiz-prestart" class="pending-reward show">Watch the ad first to unlock the quiz.</div>
+          <button class="btn btn-primary" id="btn-quiz-ad">▶ Watch Ad & Unlock Quiz</button>
+          <div id="quiz-game" style="display:none"><div class="quiz-question" id="feature-quiz-question"></div><div id="feature-quiz-options"></div><p id="feature-quiz-result" style="text-align:center"></p><button class="btn btn-secondary claim-btn" id="btn-quiz-claim" disabled>Claim Coins</button></div>
+        </div>
+      </div>
+
+      <div id="view-mission" class="view-page feature-page">
+        <div class="feature-header"><button class="back-btn" data-back-home>← Home</button><strong>Daily Mission</strong></div>
+        <div class="feature-panel">
+          <div class="feature-big-icon">🎯</div><h2>Daily Mission</h2><div class="sub">Watch 25 ads today and unlock +100 Coins.</div>
+          <div class="pending-reward show" id="mission-progress-box">Progress: <span id="feature-mission-progress">0 / 25</span></div>
+          <button class="btn btn-secondary claim-btn" id="btn-mission-claim" disabled>Claim 100 Coins</button>
+          <div class="feature-note">Your progress is counted from completed Watch Ads. Once 25 ads are completed, the claim button will unlock.</div>
+        </div>
+      </div>
+
+      <div id="view-history" class="view-page feature-page">
+        <div class="feature-header"><button class="back-btn" data-back-home>← Home</button><strong>History</strong></div>
+        <div class="content-box"><div class="content-box-title">📜 Account History</div><div class="history-list" id="history-page-list"></div></div>
+      </div>
+
+    </main>
+
+    <!-- Bottom Navigation Tabs -->
+    <nav class="bottom-nav">
+      <button type="button" class="nav-item active" data-target="view-home">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </button>
+      <button type="button" class="nav-item" data-target="view-watch">
+        <span class="nav-icon">📺</span>
+        <span>Watch</span>
+      </button>
+      <button type="button" class="nav-item" data-target="view-withdraw">
+        <span class="nav-icon">💸</span>
+        <span>Withdraw</span>
+      </button>
+      <button type="button" class="nav-item" data-target="view-refer">
+        <span class="nav-icon">🤝</span>
+        <span>Refer</span>
+      </button>
+      <button type="button" class="nav-item" data-target="view-followers">
+        <span class="nav-icon">⭐</span>
+        <span>Followers</span>
+      </button>
+      <button type="button" class="nav-item" data-target="view-history">
+        <span class="nav-icon">📜</span>
+        <span>History</span>
+      </button>
+    </nav>
+
+    <!-- Global Toast Alert -->
+    <div id="toast-banner">
+      <span class="toast-icon" id="toast-icon">ℹ️</span>
+      <span id="toast-msg">Notification text</span>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC -->
+  <script>
+    (function() {
+      "use strict";
+
+      // =================================================================
+      // 1. FIREBASE INITIALIZATION
+      // =================================================================
+      const firebaseConfig = {
+        apiKey: "AIzaSyDH81stQ8HCBMNS0CaDKBdt5RgAHoVxZAI",
+        authDomain: "reward-net-9beba.firebaseapp.com",
+        databaseURL: "https://reward-net-9beba-default-rtdb.firebaseio.com",
+        projectId: "reward-net-9beba",
+        storageBucket: "reward-net-9beba.firebasestorage.app",
+        messagingSenderId: "940342597554",
+        appId: "1:940342597554:web:57438819265c8ee38cb6ab",
+        measurementId: "G-MM5RCWXX5M"
+      };
+
+      let app = null;
+      let auth = null;
+      let database = null;
+      let firebaseReady = false;
+
+      try {
+        if (!firebase.apps.length) {
+          app = firebase.initializeApp(firebaseConfig);
+        } else {
+          app = firebase.app();
+        }
+        database = firebase.database();
+        firebaseReady = true;
+      } catch (err) {
+        console.warn("Firebase initialization notice:", err);
+      }
+
+      // =================================================================
+      // 2. STATE MANAGEMENT & LOCAL CACHE
+      // =================================================================
+      const STORAGE_KEY = "rewardnest_local_v2";
+      
+      let currentUser = {
+        uid: null,
+        coins: 10, // Initial welcome bonus
+        referralCode: "",
+        referralClaimed: false,
+        claimedTasks: {
+          youtube: false,
+          telegram: false
+        },
+        watchCount: 0,
+        dailyDate: '', spinsUsed: 0, scratchesUsed: 0, mathUsed: 0, quizUsed: 0, checkInStreak: 0, lastCheckIn: '', missionClaimed: false,
+        activityHistory: [
+          { title: "Welcome Bonus", time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), amount: "+10 Coins", type: "credit" }
+        ]
+      };
+
+      function generateUID() {
+        return 'RN' + Math.random().toString(36).substring(2, 9).toUpperCase();
+      }
+
+      function generateRefCode() {
+        return 'RN-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+      }
+
+      // Load Local Cache
+      function loadLocalStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            currentUser = Object.assign({}, currentUser, parsed);
+          }
+        } catch(e) {
+          console.error("Local storage load failed", e);
+        }
+
+        if (!currentUser.uid) {
+          currentUser.uid = generateUID();
+        }
+        if (!currentUser.referralCode) {
+          currentUser.referralCode = generateRefCode();
+        }
+        saveLocalStorage();
+      }
+
+      function saveLocalStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+        } catch (e) {
+          console.error("Local storage save failed", e);
+        }
+      }
+
+      // Local cache is loaded only after the user logs in.
+
+      // =================================================================
+      // 3. FIREBASE SYNC & ANONYMOUS AUTH
+      // =================================================================
+      const syncStatusEl = document.getElementById("cloud-sync-status");
+      const uidShortEl = document.getElementById("uid-short");
+
+      function updateUidBadge() {
+        if (currentUser.uid) {
+          uidShortEl.textContent = "ID: " + currentUser.uid.substring(0, 8);
+        }
+      }
+
+      function syncToFirebase() {
+        if (!firebaseReady || !database || !currentUser.uid) return;
+        try {
+          database.ref('users/' + currentUser.uid).update({
+            coins: currentUser.coins,
+            referralCode: currentUser.referralCode,
+            referralClaimed: currentUser.referralClaimed,
+            claimedTasks: currentUser.claimedTasks,
+            watchCount: currentUser.watchCount,
+            lastActive: firebase.database.ServerValue.TIMESTAMP
+          }).then(() => {
+            syncStatusEl.innerHTML = '<span>●</span> Synced';
+            syncStatusEl.style.color = '#C7D2FE';
+          }).catch(err => {
+            console.warn("Cloud sync non-fatal error:", err.message);
+          });
+        } catch(e) {
+          console.warn("Sync exception", e);
+        }
+      }
+
+      // Firebase is used for data storage only. No Firebase Authentication is used for the RewardNest ID login.
+      async function sha256(text) {
+        const data = new TextEncoder().encode(text);
+        const hash = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+      }
+
+      function accountKey(id){ return 'rewardnest_login_' + id; }
+      function validRewardNestId(id){ return /^\d{6,12}$/.test(id); }
+
+      async function loginRewardNest() {
+        const id = document.getElementById('rn-login-id').value.trim();
+        const password = document.getElementById('rn-login-password').value;
+        const error = document.getElementById('rn-login-error');
+        error.textContent = '';
+        if (!validRewardNestId(id)) { error.textContent = 'Use a 6-12 digit RewardNest ID.'; return; }
+        if (password.length < 4) { error.textContent = 'Password must be at least 4 characters.'; return; }
+        const hash = await sha256(password);
+        const key = accountKey(id);
+        const saved = localStorage.getItem(key);
+        if (saved && saved !== hash) { error.textContent = 'Wrong password for this device.'; return; }
+        if (!saved) localStorage.setItem(key, hash);
+        currentUser.uid = id;
+        localStorage.setItem('rewardnest_last_id', id);
+        document.getElementById('login-screen').classList.add('hidden');
+        await loadCloudUser(id);
+        updateUidBadge();
+        renderUI();
+      }
+
+      async function loadCloudUser(id){
+        if (!firebaseReady || !database) { loadLocalStorage(); return; }
+        try {
+          const snap = await database.ref('users/' + id).once('value');
+          const data = snap.val();
+          if (data) {
+            currentUser = Object.assign(currentUser, data);
+            currentUser.uid = id;
+            currentUser.claimedTasks = currentUser.claimedTasks || {youtube:false,telegram:false,telegram2:false};
+            currentUser.activityHistory = currentUser.activityHistory || [];
+          } else {
+            currentUser.uid=id; currentUser.referralCode=generateRefCode();
+            await syncToFirebase();
+          }
+          saveLocalStorage();
+        } catch(e){ console.warn('Cloud load failed',e); }
+      }
+
+      function logoutRewardNest(){
+        localStorage.removeItem(STORAGE_KEY);
+        currentUser = {uid:null,coins:10,referralCode:'',referralClaimed:false,claimedTasks:{youtube:false,telegram:false,telegram2:false},watchCount:0,activityHistory:[]};
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('rn-login-id').value = localStorage.getItem('rewardnest_last_id') || '';
+        document.getElementById('rn-login-password').value = '';
+      }
+
+      // =================================================================
+      // 4. MONETAG AD HANDLERS (REWARDED + POPUP + IN-APP)
+      // =================================================================
+      let isAdShowing = false;
+      let lastAdTimestamp = 0;
+      const AD_COOLDOWN_MS = 10000;
+
+      function triggerMonetagAd(actionDescription, rewardCallback, mode = 'interstitial') {
+        const now = Date.now();
+        if (now - lastAdTimestamp < AD_COOLDOWN_MS) {
+          rewardCallback?.(false, 'Please wait a few seconds before another ad.');
+          return;
+        }
+        if (isAdShowing) {
+          rewardCallback?.(false, 'An ad is already opening.');
+          return;
+        }
+        const sdk = window.show_11710247;
+        if (typeof sdk !== 'function') {
+          rewardCallback?.(false, 'Monetag ad is not available right now.');
+          return;
+        }
+        isAdShowing = true;
+        lastAdTimestamp = now;
+        try {
+          const result = mode === 'popup' ? sdk('pop') : sdk();
+          if (!result || typeof result.then !== 'function') {
+            isAdShowing = false;
+            rewardCallback?.(false, 'Ad completion could not be verified.');
+            return;
+          }
+          result.then(() => {
+            isAdShowing = false;
+            rewardCallback?.(true, 'Completed');
+          }).catch(err => {
+            isAdShowing = false;
+            console.warn('Monetag ad error:', err);
+            rewardCallback?.(false, 'Ad was not completed or is unavailable.');
+          });
+        } catch (e) {
+          isAdShowing = false;
+          console.warn('Monetag SDK error:', e);
+          rewardCallback?.(false, 'Unable to open the ad.');
+        }
+      }
+
+      // Monetag In-App Interstitial: no reward is attached to this format.
+      function startMonetagInApp() {
+        if (typeof window.show_11710247 !== 'function') return;
+        try {
+          window.show_11710247({
+            type: 'inApp',
+            inAppSettings: { frequency: 2, capping: 0.1, interval: 30, timeout: 5, everyPage: false }
+          });
+        } catch (e) { console.warn('In-app interstitial unavailable:', e); }
+      }
+
+      // =================================================================
+      // 5. UI NOTIFICATIONS & RENDERING
+      // =================================================================
+      const coinCounter = document.getElementById("coin-counter");
+      const inrCounter = document.getElementById("inr-counter");
+      const displayRefCode = document.getElementById("display-ref-code");
+      const refClaimContainer = document.getElementById("ref-claim-container");
+      const refClaimedMsg = document.getElementById("ref-claimed-msg");
+      const watchCountEl = document.getElementById("watch-count-today");
+      const watchEarnEl = document.getElementById("watch-earnings-today");
+      const activityList = document.getElementById("activity-log-list");
+
+      function showToast(message, icon = "ℹ️") {
+        const banner = document.getElementById("toast-banner");
+        const msgEl = document.getElementById("toast-msg");
+        const iconEl = document.getElementById("toast-icon");
+
+        msgEl.textContent = message;
+        iconEl.textContent = icon;
+        banner.classList.add("show");
+
+        setTimeout(() => {
+          banner.classList.remove("show");
+        }, 3200);
+      }
+
+      function logActivity(title, amountStr, isCredit) {
+        const item = {
+          title: title,
+          time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          amount: amountStr,
+          type: isCredit ? "credit" : "debit"
+        };
+        currentUser.activityHistory.unshift(item);
+        if (currentUser.activityHistory.length > 8) {
+          currentUser.activityHistory.pop();
+        }
+        renderActivityList();
+      }
+
+      function renderActivityList() {
+        activityList.innerHTML = "";
+        currentUser.activityHistory.forEach(act => {
+          const div = document.createElement("div");
+          div.className = "history-item";
+          div.innerHTML = `
+            <div class="history-left">
+              <span class="history-desc">${escapeHtml(act.title)}</span>
+              <span class="history-time">${escapeHtml(act.time)}</span>
+            </div>
+            <span class="history-amount ${act.type}">${escapeHtml(act.amount)}</span>
+          `;
+          activityList.appendChild(div);
+        });
+      }
+
+      function renderUI() {
+        coinCounter.textContent = currentUser.coins.toLocaleString('en-IN');
+        // 1000 Coins = Rs 10 -> 1 Coin = Rs 0.01
+        const inr = (currentUser.coins * (10 / 1000)).toFixed(2);
+        inrCounter.textContent = '₹' + inr;
+
+        displayRefCode.textContent = currentUser.referralCode || "RN-XYZ";
+
+        // Watch Section Stats
+        watchCountEl.textContent = currentUser.watchCount + " Ads";
+        watchEarnEl.textContent = (currentUser.watchCount * 10) + " Coins";
+
+        // Social task buttons status
+        const btnClaimYt = document.getElementById("btn-claim-youtube");
+        if (currentUser.claimedTasks.youtube) {
+          btnClaimYt.textContent = "✓ Claimed";
+          btnClaimYt.disabled = true;
+          btnClaimYt.style.opacity = "0.7";
+        }
+
+        const btnClaimTg = document.getElementById("btn-claim-telegram");
+        if (currentUser.claimedTasks.telegram) {
+          btnClaimTg.textContent = "✓ Claimed";
+          btnClaimTg.disabled = true;
+          btnClaimTg.style.opacity = "0.7";
+        }
+
+        const btnClaimTg2 = document.getElementById("btn-claim-telegram-2");
+        if (currentUser.claimedTasks.telegram2) {
+          btnClaimTg2.textContent = "✓ Claimed";
+          btnClaimTg2.disabled = true;
+          btnClaimTg2.style.opacity = "0.7";
+        }
+
+        // Referral Claim container
+        if (currentUser.referralClaimed) {
+          refClaimContainer.style.display = "none";
+          refClaimedMsg.style.display = "block";
+        } else {
+          refClaimContainer.style.display = "block";
+          refClaimedMsg.style.display = "none";
+        }
+
+        renderActivityList();
+        renderHistoryPage();
+        if(document.getElementById("spin-left")) renderDaily();
+      }
+
+      function renderHistoryPage(){
+        const el=document.getElementById('history-page-list'); if(!el)return;
+        el.innerHTML='';
+        (currentUser.activityHistory||[]).forEach(act=>{
+          const row=document.createElement('div'); row.className='history-item';
+          row.innerHTML='<div class="history-left"><span class="history-desc">'+escapeHtml(act.desc||'Activity')+'</span><span class="history-time">'+escapeHtml(act.time||'')+'</span></div><span class="history-amount '+(act.credit?'credit':'debit')+'">'+escapeHtml(act.amount||'')+'</span>';
+          el.appendChild(row);
+        });
+      }
+
+      function escapeHtml(string) {
+        return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+          return ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;'
+          })[s];
+        });
+      }
+
+      // =================================================================
+      // 6. NAVIGATION / SEPARATE FEATURE SCREENS
+      // =================================================================
+      const navButtons = document.querySelectorAll('.nav-item');
+      const pages = {};
+      document.querySelectorAll('.view-page').forEach(el => pages[el.id] = el);
+
+      function switchView(targetId) {
+        Object.keys(pages).forEach(key => pages[key]?.classList.toggle('active-view', key === targetId));
+        navButtons.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-target') === targetId));
+        window.scrollTo({top:0, behavior:'smooth'});
+      }
+      navButtons.forEach(btn => btn.addEventListener('click', () => switchView(btn.getAttribute('data-target'))));
+      document.querySelectorAll('[data-back-home]').forEach(btn => btn.addEventListener('click', () => switchView('view-home')));
+
+      function openFeatureAfterAd(targetId, mode, onSuccess) {
+        showToast('Loading sponsored ad…', '📺');
+        triggerMonetagAd('Open '+targetId, (success, msg) => {
+          if (!success) { showToast(msg || 'Ad not completed.', 'ℹ️'); return; }
+          switchView(targetId);
+          onSuccess?.();
+        }, mode);
+      }
+
+      // Home cards: each earning feature has its own screen.
+      document.getElementById('home-card-watch').addEventListener('click', () => switchView('view-watch'));
+      document.getElementById('home-card-withdraw').addEventListener('click', () => switchView('view-withdraw'));
+      document.getElementById('home-card-refer').addEventListener('click', () => switchView('view-refer'));
+      document.getElementById('home-card-followers').addEventListener('click', () => switchView('view-followers'));
+
+      // =================================================================
+      // 7. WATCH SECTION - REWARDED INTERSTITIAL
+      // =================================================================
+      const btnWatchAd = document.getElementById('btn-watch-ad');
+      const btnWatchSpinner = document.getElementById('btn-watch-spinner');
+      const btnWatchText = document.getElementById('btn-watch-text');
+      btnWatchAd.addEventListener('click', () => {
+        btnWatchAd.disabled = true; btnWatchSpinner.style.display='inline-block'; btnWatchText.textContent='Opening sponsored ad…';
+        triggerMonetagAd('Watch Video', (success, msg) => {
+          btnWatchAd.disabled=false; btnWatchSpinner.style.display='none'; btnWatchText.textContent='▶ Watch Monetag Ad (+10 Coins)';
+          if(success){ currentUser.coins += 10; currentUser.watchCount=(currentUser.watchCount||0)+1; logActivity('Watched Sponsored Ad','+10 Coins',true); saveLocalStorage(); syncToFirebase(); renderUI(); showToast('+10 Coins added!','🎉'); }
+          else showToast(msg || 'Ad was not completed.','ℹ️');
+        }, 'interstitial');
+      });
+
+      // =================================================================
+      // 8. DAILY REWARDS: AD FIRST -> PLAY -> CLAIM
+      // =================================================================
+      const DAILY_SPINS=15, DAILY_SCRATCHES=10, DAILY_MATH=50;
+      const spinRewards=[5,5,10,10,15,15,20,20,25,25,30];
+      const quizQuestions=[
+        {q:'What is the capital of India?',o:['Mumbai','New Delhi','Kolkata','Chennai'],a:1},
+        {q:'Which planet is known as the Red Planet?',o:['Earth','Mars','Jupiter','Venus'],a:1},
+        {q:'How many days are there in a leap year?',o:['365','366','364','367'],a:1},
+        {q:'Which is the largest ocean?',o:['Atlantic','Indian','Pacific','Arctic'],a:2},
+        {q:'What is 12 × 5?',o:['50','60','70','80'],a:1}
+      ];
+      function dateKey(){return new Date().toISOString().slice(0,10)}
+      function resetDailyState(){
+        if(currentUser.dailyDate!==dateKey()){ currentUser.dailyDate=dateKey(); currentUser.spinsUsed=0; currentUser.scratchesUsed=0; currentUser.mathUsed=0; currentUser.quizUsed=0; currentUser.missionClaimed=false; currentUser.checkinUnlocked=false; }
+      }
+      function claimReward(amount,title){ if(!amount) return; currentUser.coins+=amount; logActivity(title,'+'+amount+' Coins',true); saveLocalStorage(); syncToFirebase(); renderUI(); showToast('+'+amount+' Coins added!','🎉'); }
+      function renderDaily(){
+        resetDailyState();
+        const spinLeft=Math.max(0,DAILY_SPINS-(currentUser.spinsUsed||0));
+        const scratchLeft=Math.max(0,DAILY_SCRATCHES-(currentUser.scratchesUsed||0));
+        const mathLeft=Math.max(0,DAILY_MATH-(currentUser.mathUsed||0));
+        document.getElementById('spin-left').textContent=spinLeft; document.getElementById('scratch-left').textContent=scratchLeft; document.getElementById('math-left').textContent=mathLeft;
+        document.getElementById('mission-status').textContent=(currentUser.watchCount||0)+' / 25 ads watched';
+        document.getElementById('feature-mission-progress').textContent=Math.min(currentUser.watchCount||0,25)+' / 25';
+        document.getElementById('checkin-streak-value').textContent=currentUser.checkInStreak||0;
+      }
+
+      // Check-in: ad first, then claim.
+      document.getElementById('home-card-checkin').addEventListener('click',()=>{
+        resetDailyState(); if(currentUser.lastCheckIn===dateKey()){showToast('Today’s check-in is already claimed.','ℹ️');return;}
+        openFeatureAfterAd('view-checkin','popup',()=>{ document.getElementById('btn-checkin').disabled=false; renderDaily(); });
+      });
+      document.getElementById('btn-checkin').addEventListener('click',()=>{
+        resetDailyState(); const today=dateKey(); if(currentUser.lastCheckIn===today)return;
+        const y=new Date(); y.setDate(y.getDate()-1); const yesterday=y.toISOString().slice(0,10);
+        currentUser.checkInStreak=(currentUser.lastCheckIn===yesterday?(currentUser.checkInStreak||0)+1:1); currentUser.lastCheckIn=today;
+        const rewards=[5,10,15,20,25,30,50]; const reward=rewards[(currentUser.checkInStreak-1)%7]; claimReward(reward,'Daily Check-In Day '+currentUser.checkInStreak); document.getElementById('btn-checkin').disabled=true; renderDaily();
+      });
+
+      // Spin: ad unlocks screen; spin produces pending reward; Claim adds coins.
+      document.getElementById('home-card-spin').addEventListener('click',()=>{
+        resetDailyState(); if((currentUser.spinsUsed||0)>=DAILY_SPINS){showToast('No spins left today.','ℹ️');return;}
+        openFeatureAfterAd('view-spin','interstitial',()=>{ document.getElementById('spin-prestart').style.display='none'; document.getElementById('btn-spin-ad').style.display='none'; document.getElementById('spin-game').style.display='block'; });
+      });
+      document.getElementById('btn-spin-ad').addEventListener('click',()=>{
+        resetDailyState(); if((currentUser.spinsUsed||0)>=DAILY_SPINS)return;
+        triggerMonetagAd('Spin Unlock',(ok,msg)=>{if(ok){document.getElementById('spin-prestart').style.display='none';document.getElementById('btn-spin-ad').style.display='none';document.getElementById('spin-game').style.display='block';}else showToast(msg,'ℹ️');},'interstitial');
+      });
+      let pendingSpinReward=0;
+      document.getElementById('btn-spin-play').addEventListener('click',()=>{
+        resetDailyState(); if((currentUser.spinsUsed||0)>=DAILY_SPINS)return;
+        const btn=document.getElementById('btn-spin-play'); btn.disabled=true; pendingSpinReward=spinRewards[Math.floor(Math.random()*spinRewards.length)];
+        const wheel=document.getElementById('feature-wheel'); wheel.style.transform='rotate('+(1080+Math.floor(Math.random()*360))+'deg)';
+        setTimeout(()=>{document.getElementById('spin-result').textContent=pendingSpinReward+' Coins';document.getElementById('btn-spin-claim').disabled=false;},2900);
+      });
+      document.getElementById('btn-spin-claim').addEventListener('click',()=>{
+        if(!pendingSpinReward)return; currentUser.spinsUsed=(currentUser.spinsUsed||0)+1; claimReward(pendingSpinReward,'Spin & Win Reward'); pendingSpinReward=0; document.getElementById('btn-spin-claim').disabled=true; document.getElementById('btn-spin-play').disabled=false; document.getElementById('spin-game').style.display='none'; document.getElementById('btn-spin-ad').style.display='block'; document.getElementById('spin-prestart').style.display='block'; renderDaily();
+      });
+
+      // Scratch
+      let pendingScratchReward=0;
+      document.getElementById('home-card-scratch').addEventListener('click',()=>{
+        resetDailyState(); if((currentUser.scratchesUsed||0)>=DAILY_SCRATCHES){showToast('No scratch cards left today.','ℹ️');return;}
+        openFeatureAfterAd('view-scratch','popup',()=>{document.getElementById('scratch-prestart').style.display='none';document.getElementById('btn-scratch-ad').style.display='none';document.getElementById('scratch-game').style.display='block';});
+      });
+      document.getElementById('btn-scratch-ad').addEventListener('click',()=>{triggerMonetagAd('Scratch Unlock',(ok,msg)=>{if(ok){document.getElementById('scratch-prestart').style.display='none';document.getElementById('btn-scratch-ad').style.display='none';document.getElementById('scratch-game').style.display='block';}else showToast(msg,'ℹ️');},'popup');});
+      document.getElementById('feature-scratch-box').addEventListener('click',()=>{
+        if(document.getElementById('feature-scratch-box').classList.contains('revealed'))return;
+        pendingScratchReward=[5,10,10,15,20,25,30][Math.floor(Math.random()*7)]; const box=document.getElementById('feature-scratch-box'); box.classList.add('revealed'); box.textContent='+'+pendingScratchReward+' COINS'; document.getElementById('scratch-result').textContent='Reward revealed. Tap Claim Coins.'; document.getElementById('btn-scratch-claim').disabled=false;
+      });
+      document.getElementById('btn-scratch-claim').addEventListener('click',()=>{if(!pendingScratchReward)return;currentUser.scratchesUsed=(currentUser.scratchesUsed||0)+1;claimReward(pendingScratchReward,'Daily Scratch Card');pendingScratchReward=0;document.getElementById('btn-scratch-claim').disabled=true;document.getElementById('scratch-game').style.display='none';document.getElementById('btn-scratch-ad').style.display='block';document.getElementById('scratch-prestart').style.display='block';const box=document.getElementById('feature-scratch-box');box.classList.remove('revealed');box.textContent='TAP TO SCRATCH';renderDaily();});
+
+      // Math
+      let mathAnswer=null, pendingMathReward=0;
+      function prepareMath(){let a=Math.floor(Math.random()*12)+1,b=Math.floor(Math.random()*12)+1,op=Math.random()<.5?'+':'×';mathAnswer=op==='+'?a+b:a*b;document.getElementById('feature-math-question').textContent=a+' '+op+' '+b+' = ?';document.getElementById('feature-math-answer').value='';document.getElementById('feature-math-result').textContent='';document.getElementById('btn-math-submit').disabled=false;document.getElementById('btn-math-claim').disabled=true;pendingMathReward=0;}
+      document.getElementById('home-card-math').addEventListener('click',()=>{resetDailyState();if((currentUser.mathUsed||0)>=DAILY_MATH){showToast('No math questions left today.','ℹ️');return;}openFeatureAfterAd('view-math','interstitial',()=>{document.getElementById('math-prestart').style.display='none';document.getElementById('btn-math-ad').style.display='none';document.getElementById('math-game').style.display='block';prepareMath();});});
+      document.getElementById('btn-math-ad').addEventListener('click',()=>{triggerMonetagAd('Math Unlock',(ok,msg)=>{if(ok){document.getElementById('math-prestart').style.display='none';document.getElementById('btn-math-ad').style.display='none';document.getElementById('math-game').style.display='block';prepareMath();}else showToast(msg,'ℹ️');},'interstitial');});
+      document.getElementById('btn-math-submit').addEventListener('click',()=>{if(mathAnswer===null)return;const v=Number(document.getElementById('feature-math-answer').value);document.getElementById('btn-math-submit').disabled=true;if(v===mathAnswer){pendingMathReward=2;document.getElementById('feature-math-result').textContent='Correct! +2 Coins pending. Tap Claim Coins.';document.getElementById('btn-math-claim').disabled=false;}else{currentUser.mathUsed=(currentUser.mathUsed||0)+1;saveLocalStorage();syncToFirebase();document.getElementById('feature-math-result').textContent='Wrong answer. No reward.';renderDaily();}});
+      document.getElementById('btn-math-claim').addEventListener('click',()=>{if(!pendingMathReward)return;currentUser.mathUsed=(currentUser.mathUsed||0)+1;claimReward(pendingMathReward,'Daily Math Correct Answer');pendingMathReward=0;document.getElementById('btn-math-claim').disabled=true;document.getElementById('math-game').style.display='none';document.getElementById('btn-math-ad').style.display='block';document.getElementById('math-prestart').style.display='block';renderDaily();});
+
+      // Quiz
+      let pendingQuizReward=0;
+      function prepareQuiz(){resetDailyState();const q=quizQuestions[(currentUser.quizUsed||0)%quizQuestions.length];document.getElementById('feature-quiz-question').textContent=q.q;document.getElementById('feature-quiz-result').textContent='';document.getElementById('btn-quiz-claim').disabled=true;pendingQuizReward=0;const box=document.getElementById('feature-quiz-options');box.innerHTML=q.o.map((x,i)=>'<button type="button" class="quiz-option" data-i="'+i+'">'+escapeHtml(x)+'</button>').join('');box.querySelectorAll('.quiz-option').forEach(btn=>btn.addEventListener('click',()=>{box.querySelectorAll('.quiz-option').forEach(x=>x.disabled=true);const correct=Number(btn.dataset.i)===q.a;currentUser.quizUsed=(currentUser.quizUsed||0)+1;if(correct){btn.classList.add('correct');pendingQuizReward=5;document.getElementById('feature-quiz-result').textContent='Correct! +5 Coins pending. Tap Claim Coins.';document.getElementById('btn-quiz-claim').disabled=false;}else{btn.classList.add('wrong');document.getElementById('feature-quiz-result').textContent='Wrong answer. No reward.';}saveLocalStorage();syncToFirebase();renderDaily();}));}
+      document.getElementById('home-card-quiz').addEventListener('click',()=>{resetDailyState();if((currentUser.quizUsed||0)>=quizQuestions.length){showToast('Today’s quiz is completed.','ℹ️');return;}openFeatureAfterAd('view-quiz','popup',()=>{document.getElementById('quiz-prestart').style.display='none';document.getElementById('btn-quiz-ad').style.display='none';document.getElementById('quiz-game').style.display='block';prepareQuiz();});});
+      document.getElementById('btn-quiz-ad').addEventListener('click',()=>{triggerMonetagAd('Quiz Unlock',(ok,msg)=>{if(ok){document.getElementById('quiz-prestart').style.display='none';document.getElementById('btn-quiz-ad').style.display='none';document.getElementById('quiz-game').style.display='block';prepareQuiz();}else showToast(msg,'ℹ️');},'popup');});
+      document.getElementById('btn-quiz-claim').addEventListener('click',()=>{if(!pendingQuizReward)return;claimReward(pendingQuizReward,'Quiz Correct Answer');pendingQuizReward=0;document.getElementById('btn-quiz-claim').disabled=true;document.getElementById('quiz-game').style.display='none';document.getElementById('btn-quiz-ad').style.display='block';document.getElementById('quiz-prestart').style.display='block';renderDaily();});
+
+      // Mission: click -> rewarded ad -> separate mission screen -> claim after 25 ads.
+      document.getElementById('home-card-mission').addEventListener('click',()=>{
+        resetDailyState();
+        openFeatureAfterAd('view-mission','popup',()=>{
+          document.getElementById('btn-mission-claim').disabled=((currentUser.watchCount||0)<25 || !!currentUser.missionClaimed);
+          renderDaily();
+        });
+      });
+      document.getElementById('btn-mission-claim').addEventListener('click',()=>{
+        if((currentUser.watchCount||0)<25||currentUser.missionClaimed)return;
+        currentUser.missionClaimed=true; claimReward(100,'Daily Mission Bonus'); renderDaily();
+      });
+
+      // Initialize In-App Interstitial once. No coin reward is attached.
+      setTimeout(startMonetagInApp, 1500);
+
+      // =================================================================
+      // 12. INITIALIZATION
+      // =================================================================
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('rn-login-btn').addEventListener('click', loginRewardNest);
+        document.getElementById('rn-login-password').addEventListener('keydown', e => { if(e.key==='Enter') loginRewardNest(); });
+        document.getElementById('uid-pill').addEventListener('click', ()=>{ if(currentUser.uid && confirm('Logout from RewardNest?')) logoutRewardNest(); });
+        const last = localStorage.getItem('rewardnest_last_id');
+        if(last) document.getElementById('rn-login-id').value = last;
+        // Do not initialize a Firebase Authentication session. Login is RewardNest-ID based.
+        updateUidBadge();
+      });
+
+    })();
+  </script>
+</body>
+</html>
