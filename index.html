@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>QuickToolBox</title>
-
+  <title>QuickToolBox & Downloader</title>
+  
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Adsgram SDK -->
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* Native Telegram smooth touch experience */
     body {
-      background-color: var(--tg-theme-bg-color, #0f172a);
+      background-color: var(--tg-theme-bg-color, #0b1329);
       color: var(--tg-theme-text-color, #f8fafc);
       -webkit-tap-highlight-color: transparent;
       user-select: none;
@@ -24,241 +23,267 @@
 </head>
 <body class="min-h-screen p-4 flex flex-col justify-between font-sans">
 
-  <!-- Top App Bar -->
+  <!-- Header -->
   <header class="mb-4">
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-lg font-bold text-white shadow-md">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-lg font-bold text-white shadow-lg">
           ⚡
         </div>
         <div>
-          <h1 class="font-bold text-base tracking-wide leading-tight">QuickToolBox</h1>
-          <p class="text-xs text-slate-400">100% Private • In-Browser Processing</p>
+          <h1 class="font-bold text-base tracking-wide leading-tight">QuickMedia & Tools</h1>
+          <p class="text-xs text-slate-400">Reels, Shorts & Image Utility</p>
         </div>
       </div>
-      <span class="text-[11px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full font-medium">
-        Free
+      <span class="text-[11px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2.5 py-0.5 rounded-full font-medium">
+        Free Pro
       </span>
     </div>
   </header>
 
-  <!-- Main Multi-Tool Dashboard -->
+  <!-- Navigation Tabs -->
+  <div class="flex bg-slate-800/80 p-1 rounded-xl mb-4 border border-slate-700">
+    <button id="tab-video" onclick="switchMode('video')" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition-all">
+      📥 Video Downloader
+    </button>
+    <button id="tab-img" onclick="switchMode('img')" class="flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">
+      🖼️ Image Tools
+    </button>
+  </div>
+
+  <!-- Main Container -->
   <main class="space-y-4 flex-1">
-
-    <!-- Tool Grid (2 Columns) -->
-    <div class="grid grid-cols-2 gap-2.5">
-      <!-- Tool 1: Compress -->
-      <button onclick="selectTool('compress')" id="btn-compress" class="tool-card p-3 rounded-xl border border-blue-500 bg-slate-800/80 text-left transition-all">
-        <div class="text-xl mb-1">🖼️</div>
-        <div class="text-sm font-semibold">Compressor</div>
-        <div class="text-[11px] text-slate-400">Reduce file size</div>
-      </button>
-
-      <!-- Tool 2: WebP / Format Convert -->
-      <button onclick="selectTool('convert')" id="btn-convert" class="tool-card p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-left transition-all">
-        <div class="text-xl mb-1">🔄</div>
-        <div class="text-sm font-semibold">WebP Convert</div>
-        <div class="text-[11px] text-slate-400">PNG/JPG to WebP</div>
-      </button>
-
-      <!-- Tool 3: Govt 50KB Fixer -->
-      <button onclick="selectTool('passport')" id="btn-passport" class="tool-card p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-left transition-all">
-        <div class="text-xl mb-1">📐</div>
-        <div class="text-sm font-semibold">Under 50KB</div>
-        <div class="text-[11px] text-slate-400">For online forms</div>
-      </button>
-
-      <!-- Tool 4: Metadata Stripper -->
-      <button onclick="selectTool('strip')" id="btn-strip" class="tool-card p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-left transition-all">
-        <div class="text-xl mb-1">🛡️</div>
-        <div class="text-sm font-semibold">Strip EXIF</div>
-        <div class="text-[11px] text-slate-400">Erase GPS & tags</div>
-      </button>
-    </div>
-
-    <!-- Active Workspace / File Input Area -->
-    <div class="bg-slate-800/70 border border-slate-700 rounded-2xl p-4 shadow-sm">
-      <div class="flex items-center justify-between mb-3">
-        <span id="active-tool-title" class="text-xs uppercase tracking-wider font-bold text-blue-400">Active: Image Compressor</span>
-        <span id="file-size-tag" class="text-[11px] text-slate-400 hidden"></span>
-      </div>
-
-      <!-- File Dropzone -->
-      <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-600 rounded-xl p-5 cursor-pointer hover:border-blue-400 transition-colors bg-slate-900/50">
-        <svg class="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-        </svg>
-        <span id="upload-label" class="text-xs text-slate-300 font-medium text-center">Tap to select photo from gallery</span>
-        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
-      </label>
-
-      <!-- Quality Slider (Visible when tool is compressor) -->
-      <div id="quality-slider-container" class="mt-4">
-        <div class="flex justify-between text-xs text-slate-300 mb-1">
-          <span>Quality / Compression</span>
-          <span id="quality-val" class="font-bold text-blue-400">70%</span>
+    
+    <!-- SECTION 1: VIDEO DOWNLOADER -->
+    <div id="video-section" class="space-y-3">
+      <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-4">
+        <label class="block text-xs font-medium text-slate-300 mb-2">Paste Video Link (Shorts, Reels, FB, X)</label>
+        <div class="relative">
+          <input type="text" id="videoUrl" placeholder="https://www.instagram.com/reel/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+          <button onclick="pasteFromClipboard()" class="absolute right-2 top-2 bg-slate-800 hover:bg-slate-700 text-[11px] text-blue-400 px-2.5 py-1.5 rounded-lg border border-slate-700">
+            Paste
+          </button>
         </div>
-        <input type="range" id="qualityRange" min="10" max="95" value="70" class="w-full accent-blue-500" oninput="updateQuality(this.value)" />
+
+        <div class="flex items-center space-x-2 mt-3 text-[11px] text-slate-400">
+          <span>Supported:</span>
+          <span class="bg-slate-700/50 px-1.5 py-0.5 rounded text-rose-400">Instagram</span>
+          <span class="bg-slate-700/50 px-1.5 py-0.5 rounded text-red-500">YouTube</span>
+          <span class="bg-slate-700/50 px-1.5 py-0.5 rounded text-blue-400">Facebook</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: IMAGE TOOLS (Hidden by default) -->
+    <div id="img-section" class="hidden space-y-3">
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="selectImgTool('compress')" id="tool-compress" class="p-2.5 rounded-xl border border-blue-500 bg-slate-800/80 text-left text-xs font-semibold">
+          🗜️ Compress
+        </button>
+        <button onclick="selectImgTool('webp')" id="tool-webp" class="p-2.5 rounded-xl border border-slate-700 bg-slate-800/40 text-left text-xs font-semibold">
+          🔄 To WebP
+        </button>
       </div>
 
-      <!-- Status Indicator -->
-      <div id="status-box" class="mt-3 text-center text-xs text-amber-400 hidden"></div>
+      <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-4">
+        <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-600 rounded-xl p-5 cursor-pointer bg-slate-900/50">
+          <span id="img-label" class="text-xs text-slate-300 font-medium">Select Image from Device</span>
+          <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleImg(event)" />
+        </label>
+      </div>
     </div>
+
+    <!-- Status Message Display -->
+    <div id="status-box" class="p-3 rounded-xl text-center text-xs font-medium hidden"></div>
+
   </main>
 
-  <!-- Bottom Trigger Action Button -->
+  <!-- Bottom CTA / Download Button -->
   <footer class="mt-4">
-    <button id="actionBtn" onclick="processAndShowAd()" disabled class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
-      <span id="btn-text">Select Image to Begin</span>
+    <button id="mainBtn" onclick="handleStartProcess()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
+      <span id="btn-text">⚡ Download / Process</span>
     </button>
-    <p class="text-[10px] text-center text-slate-500 mt-2">Free utility supported by a short 10s video partner ad</p>
+    <p class="text-[10px] text-center text-slate-500 mt-2">Free utility supported by a short partner ad</p>
   </footer>
 
   <script>
-    // 1. Initialize Telegram WebApp
+    // 1. Initialize Telegram Mini App
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
     }
 
-    // 2. State Management
-    let currentTool = 'compress';
+    // 2. Initialize Adsgram with UnitID 47374
+    let AdController = null;
+    if (window.Adsgram) {
+      AdController = window.Adsgram.init({ 
+        blockId: "47374", 
+        debug: true // Unit approve hone tak test ad trigger karega, baad me false kar sakte hain
+      });
+    }
+
+    let activeTab = 'video';
+    let currentImgTool = 'compress';
     let loadedImage = null;
     let selectedFile = null;
-    let compressionQuality = 0.70;
 
-    // 3. Setup Adsgram Rewarded Ad Controller
-    // NOTE: Replace 'YOUR_BLOCK_ID' with your real Block ID from adsgram.ai
-    const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "47374" }) : null;
+    function switchMode(mode) {
+      activeTab = mode;
+      const vSec = document.getElementById('video-section');
+      const iSec = document.getElementById('img-section');
+      const tVid = document.getElementById('tab-video');
+      const tImg = document.getElementById('tab-img');
 
-    function selectTool(toolKey) {
-      currentTool = toolKey;
-      document.querySelectorAll('.tool-card').forEach(card => {
-        card.classList.remove('border-blue-500', 'bg-slate-800/80');
-        card.classList.add('border-slate-700', 'bg-slate-800/40');
-      });
-
-      const activeBtn = document.getElementById(`btn-${toolKey}`);
-      activeBtn.classList.remove('border-slate-700', 'bg-slate-800/40');
-      activeBtn.classList.add('border-blue-500', 'bg-slate-800/80');
-
-      const titleMap = {
-        'compress': 'Active: Image Compressor',
-        'convert': 'Active: WebP Converter',
-        'passport': 'Active: Under 50KB Form Fixer',
-        'strip': 'Active: Metadata Eraser'
-      };
-      document.getElementById('active-tool-title').innerText = titleMap[toolKey];
-      document.getElementById('quality-slider-container').style.display = (toolKey === 'compress') ? 'block' : 'none';
+      if (mode === 'video') {
+        vSec.classList.remove('hidden');
+        iSec.classList.add('hidden');
+        tVid.className = 'flex-1 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white';
+        tImg.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400';
+      } else {
+        vSec.classList.add('hidden');
+        iSec.classList.remove('hidden');
+        tImg.className = 'flex-1 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white';
+        tVid.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400';
+      }
     }
 
-    function updateQuality(val) {
-      compressionQuality = val / 100;
-      document.getElementById('quality-val').innerText = `${val}%`;
+    function selectImgTool(tool) {
+      currentImgTool = tool;
+      document.getElementById('tool-compress').className = tool === 'compress' 
+        ? 'p-2.5 rounded-xl border border-blue-500 bg-slate-800/80 text-left text-xs font-semibold'
+        : 'p-2.5 rounded-xl border border-slate-700 bg-slate-800/40 text-left text-xs font-semibold';
+      document.getElementById('tool-webp').className = tool === 'webp'
+        ? 'p-2.5 rounded-xl border border-blue-500 bg-slate-800/80 text-left text-xs font-semibold'
+        : 'p-2.5 rounded-xl border border-slate-700 bg-slate-800/40 text-left text-xs font-semibold';
     }
 
-    function handleFileSelect(event) {
-      const file = event.target.files[0];
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        document.getElementById('videoUrl').value = text;
+      } catch (err) {
+        alert("Clipboard permission denied. Please paste manually.");
+      }
+    }
+
+    function handleImg(e) {
+      const file = e.target.files[0];
       if (!file) return;
-
       selectedFile = file;
-      const sizeKB = (file.size / 1024).toFixed(1);
-
-      document.getElementById('upload-label').innerText = `Selected: ${file.name.substring(0, 18)}...`;
-      const sizeTag = document.getElementById('file-size-tag');
-      sizeTag.innerText = `Original: ${sizeKB} KB`;
-      sizeTag.classList.remove('hidden');
-
+      document.getElementById('img-label').innerText = `Loaded: ${file.name.substring(0, 18)}...`;
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = (event) => {
         const img = new Image();
-        img.onload = function() {
-          loadedImage = img;
-          const actionBtn = document.getElementById('actionBtn');
-          actionBtn.disabled = false;
-          document.getElementById('btn-text').innerText = "⚡ Process & Download";
-        };
-        img.src = e.target.result;
+        img.onload = () => { loadedImage = img; };
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
 
-    // 4. Core Monetization + Processing Loop
-    function processAndShowAd() {
+    // Process Trigger + Monetization Gate
+    function handleStartProcess() {
       const statusBox = document.getElementById('status-box');
-      statusBox.classList.remove('hidden');
-      statusBox.innerText = "Loading ad partner...";
+      statusBox.classList.remove('hidden', 'bg-emerald-950', 'text-emerald-400', 'bg-rose-950', 'text-rose-400');
+      statusBox.classList.add('bg-slate-800', 'text-amber-400');
+      statusBox.innerText = "Loading partner ad...";
 
       if (AdController) {
-        AdController.show().then((result) => {
-          // User watched the ad completely -> deliver file
-          statusBox.innerText = "Processing file locally...";
-          executeFileExport();
+        AdController.show().then(() => {
+          runSelectedTask();
         }).catch((err) => {
-          // If ad fails or user closes early, still allow download for good UX
-          console.warn("Ad skipped or failed:", err);
-          executeFileExport();
+          console.warn("Ad bypassed/failed:", err);
+          runSelectedTask();
         });
       } else {
-        // Fallback for local browser testing without Adsgram SDK
-        setTimeout(executeFileExport, 800);
+        runSelectedTask();
       }
     }
 
-    // 5. Client-Side HTML5 Canvas Engine (Zero server load)
-    function executeFileExport() {
-      if (!loadedImage) return;
+    function runSelectedTask() {
+      if (activeTab === 'video') {
+        downloadSocialVideo();
+      } else {
+        processLocalImage();
+      }
+    }
+
+    // Video Downloader API Resolver
+    async function downloadSocialVideo() {
+      const urlInput = document.getElementById('videoUrl').value.trim();
+      const statusBox = document.getElementById('status-box');
+
+      if (!urlInput) {
+        statusBox.className = 'p-3 rounded-xl text-center text-xs font-medium bg-rose-950 text-rose-400';
+        statusBox.innerText = "⚠️ Please paste a valid video URL.";
+        return;
+      }
+
+      statusBox.innerText = "Connecting to media stream...";
+
+      try {
+        // Free open-source Cobalt API instance
+        const response = await fetch('https://api.cobalt.tools/api/json', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            url: urlInput,
+            vQuality: '720'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.url) {
+          statusBox.className = 'p-3 rounded-xl text-center text-xs font-medium bg-emerald-950 text-emerald-400';
+          statusBox.innerText = "✅ Video found! Starting download...";
+          
+          const a = document.createElement('a');
+          a.href = data.url;
+          a.download = `Media_${Date.now()}.mp4`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } else {
+          throw new Error(data.text || "Could not fetch media link");
+        }
+      } catch (error) {
+        statusBox.className = 'p-3 rounded-xl text-center text-xs font-medium bg-rose-950 text-rose-400';
+        statusBox.innerText = "❌ Download failed or URL unsupported. Try another video link.";
+      }
+    }
+
+    // Client-side Canvas Image Engine
+    function processLocalImage() {
+      const statusBox = document.getElementById('status-box');
+      if (!loadedImage) {
+        statusBox.className = 'p-3 rounded-xl text-center text-xs font-medium bg-rose-950 text-rose-400';
+        statusBox.innerText = "⚠️ Please choose an image first.";
+        return;
+      }
 
       const canvas = document.createElement('canvas');
-      let width = loadedImage.width;
-      let height = loadedImage.height;
-
-      // In passport mode, scale image dimension to ensure size drops under 50KB
-      if (currentTool === 'passport') {
-        const maxDim = 600;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = loadedImage.width;
+      canvas.height = loadedImage.height;
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(loadedImage, 0, 0, width, height);
+      ctx.drawImage(loadedImage, 0, 0);
 
-      // Determine output MIME format
-      let outputMime = 'image/jpeg';
-      let extension = 'jpg';
-      let exportQuality = compressionQuality;
+      const mime = currentImgTool === 'webp' ? 'image/webp' : 'image/jpeg';
+      const ext = currentImgTool === 'webp' ? 'webp' : 'jpg';
+      const dataUrl = canvas.toDataURL(mime, 0.65);
 
-      if (currentTool === 'convert') {
-        outputMime = 'image/webp';
-        extension = 'webp';
-      } else if (currentTool === 'passport') {
-        exportQuality = 0.45;
-      }
+      const dl = document.createElement('a');
+      dl.href = dataUrl;
+      dl.download = `QuickTool_${Date.now()}.${ext}`;
+      document.body.appendChild(dl);
+      dl.click();
+      document.body.removeChild(dl);
 
-      const dataUrl = canvas.toDataURL(outputMime, exportQuality);
-
-      // Trigger instant browser download
-      const downloadLink = document.createElement('a');
-      downloadLink.href = dataUrl;
-      downloadLink.download = `QuickTool_${Date.now()}.${extension}`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-
-      const statusBox = document.getElementById('status-box');
-      statusBox.classList.remove('text-amber-400');
-      statusBox.classList.add('text-emerald-400');
-      statusBox.innerText = "✅ Done! File downloaded successfully.";
+      statusBox.className = 'p-3 rounded-xl text-center text-xs font-medium bg-emerald-950 text-emerald-400';
+      statusBox.innerText = "✅ Image processed and downloaded!";
     }
   </script>
 </body>
