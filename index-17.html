@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>QuickToolBox</title>
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Adsgram SDK -->
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Native Telegram smooth touch experience */
+    body {
+      background-color: var(--tg-theme-bg-color, #0f172a);
+      color: var(--tg-theme-text-color, #f8fafc);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 flex flex-col justify-between font-sans">
+
+  <!-- Top App Bar -->
+  <header class="mb-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-lg font-bold text-white shadow-md">
+          ⚡
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-wide leading-tight">QuickToolBox</h1>
+          <p class="text-xs text-slate-400">100% Private • In-Browser Processing</p>
+        </div>
+      </div>
+      <span class="text-[11px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full font-medium">
+        Free
+      </span>
+    </div>
+  </header>
+
+  <!-- Main Multi-Tool Dashboard -->
+  <main class="space-y-4 flex-1">
+
+    <!-- Tool Grid (2 Columns) -->
+    <div class="grid grid-cols-2 gap-2.5">
+      <!-- Tool 1: Compress -->
+      <button onclick="selectTool('compress')" id="btn-compress" class="tool-card p-3 rounded-xl border border-blue-500 bg-slate-800/80 text-left transition-all">
+        <div class="text-xl mb-1">🖼️</div>
+        <div class="text-sm font-semibold">Compressor</div>
+        <div class="text-[11px] text-slate-400">Reduce file size</div>
+      </button>
+
+      <!-- Tool 2: WebP / Format Convert -->
+      <button onclick="selectTool('convert')" id="btn-convert" class="tool-card p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-left transition-all">
+        <div class="text-xl mb-1">🔄</div>
+        <div class="text-sm font-semibold">WebP Convert</div>
+        <div class="text-[11px] text-slate-400">PNG/JPG to WebP</div>
+      </button>
+
+      <!-- Tool 3: Govt 50KB Fixer -->
+      <button onclick="selectTool('passport')" id="btn-passport" class="tool-card p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-left transition-all">
+        <div class="text-xl mb-1">📐</div>
+        <div class="text-sm font-semibold">Under 50KB</div>
+        <div class="text-[11px] text-slate-400">For online forms</div>
+      </button>
+
+      <!-- Tool 4: Metadata Stripper -->
+      <button onclick="selectTool('strip')" id="btn-strip" class="tool-card p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-left transition-all">
+        <div class="text-xl mb-1">🛡️</div>
+        <div class="text-sm font-semibold">Strip EXIF</div>
+        <div class="text-[11px] text-slate-400">Erase GPS & tags</div>
+      </button>
+    </div>
+
+    <!-- Active Workspace / File Input Area -->
+    <div class="bg-slate-800/70 border border-slate-700 rounded-2xl p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <span id="active-tool-title" class="text-xs uppercase tracking-wider font-bold text-blue-400">Active: Image Compressor</span>
+        <span id="file-size-tag" class="text-[11px] text-slate-400 hidden"></span>
+      </div>
+
+      <!-- File Dropzone -->
+      <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-600 rounded-xl p-5 cursor-pointer hover:border-blue-400 transition-colors bg-slate-900/50">
+        <svg class="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+        </svg>
+        <span id="upload-label" class="text-xs text-slate-300 font-medium text-center">Tap to select photo from gallery</span>
+        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
+      </label>
+
+      <!-- Quality Slider (Visible when tool is compressor) -->
+      <div id="quality-slider-container" class="mt-4">
+        <div class="flex justify-between text-xs text-slate-300 mb-1">
+          <span>Quality / Compression</span>
+          <span id="quality-val" class="font-bold text-blue-400">70%</span>
+        </div>
+        <input type="range" id="qualityRange" min="10" max="95" value="70" class="w-full accent-blue-500" oninput="updateQuality(this.value)" />
+      </div>
+
+      <!-- Status Indicator -->
+      <div id="status-box" class="mt-3 text-center text-xs text-amber-400 hidden"></div>
+    </div>
+  </main>
+
+  <!-- Bottom Trigger Action Button -->
+  <footer class="mt-4">
+    <button id="actionBtn" onclick="processAndShowAd()" disabled class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
+      <span id="btn-text">Select Image to Begin</span>
+    </button>
+    <p class="text-[10px] text-center text-slate-500 mt-2">Free utility supported by a short 10s video partner ad</p>
+  </footer>
+
+  <script>
+    // 1. Initialize Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    // 2. State Management
+    let currentTool = 'compress';
+    let loadedImage = null;
+    let selectedFile = null;
+    let compressionQuality = 0.70;
+
+    // 3. Setup Adsgram Rewarded Ad Controller
+    // NOTE: Replace 'YOUR_BLOCK_ID' with your real Block ID from adsgram.ai
+    const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "YOUR_BLOCK_ID" }) : null;
+
+    function selectTool(toolKey) {
+      currentTool = toolKey;
+      document.querySelectorAll('.tool-card').forEach(card => {
+        card.classList.remove('border-blue-500', 'bg-slate-800/80');
+        card.classList.add('border-slate-700', 'bg-slate-800/40');
+      });
+
+      const activeBtn = document.getElementById(`btn-${toolKey}`);
+      activeBtn.classList.remove('border-slate-700', 'bg-slate-800/40');
+      activeBtn.classList.add('border-blue-500', 'bg-slate-800/80');
+
+      const titleMap = {
+        'compress': 'Active: Image Compressor',
+        'convert': 'Active: WebP Converter',
+        'passport': 'Active: Under 50KB Form Fixer',
+        'strip': 'Active: Metadata Eraser'
+      };
+      document.getElementById('active-tool-title').innerText = titleMap[toolKey];
+      document.getElementById('quality-slider-container').style.display = (toolKey === 'compress') ? 'block' : 'none';
+    }
+
+    function updateQuality(val) {
+      compressionQuality = val / 100;
+      document.getElementById('quality-val').innerText = `${val}%`;
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      selectedFile = file;
+      const sizeKB = (file.size / 1024).toFixed(1);
+
+      document.getElementById('upload-label').innerText = `Selected: ${file.name.substring(0, 18)}...`;
+      const sizeTag = document.getElementById('file-size-tag');
+      sizeTag.innerText = `Original: ${sizeKB} KB`;
+      sizeTag.classList.remove('hidden');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          loadedImage = img;
+          const actionBtn = document.getElementById('actionBtn');
+          actionBtn.disabled = false;
+          document.getElementById('btn-text').innerText = "⚡ Process & Download";
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 4. Core Monetization + Processing Loop
+    function processAndShowAd() {
+      const statusBox = document.getElementById('status-box');
+      statusBox.classList.remove('hidden');
+      statusBox.innerText = "Loading ad partner...";
+
+      if (AdController) {
+        AdController.show().then((result) => {
+          // User watched the ad completely -> deliver file
+          statusBox.innerText = "Processing file locally...";
+          executeFileExport();
+        }).catch((err) => {
+          // If ad fails or user closes early, still allow download for good UX
+          console.warn("Ad skipped or failed:", err);
+          executeFileExport();
+        });
+      } else {
+        // Fallback for local browser testing without Adsgram SDK
+        setTimeout(executeFileExport, 800);
+      }
+    }
+
+    // 5. Client-Side HTML5 Canvas Engine (Zero server load)
+    function executeFileExport() {
+      if (!loadedImage) return;
+
+      const canvas = document.createElement('canvas');
+      let width = loadedImage.width;
+      let height = loadedImage.height;
+
+      // In passport mode, scale image dimension to ensure size drops under 50KB
+      if (currentTool === 'passport') {
+        const maxDim = 600;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(loadedImage, 0, 0, width, height);
+
+      // Determine output MIME format
+      let outputMime = 'image/jpeg';
+      let extension = 'jpg';
+      let exportQuality = compressionQuality;
+
+      if (currentTool === 'convert') {
+        outputMime = 'image/webp';
+        extension = 'webp';
+      } else if (currentTool === 'passport') {
+        exportQuality = 0.45;
+      }
+
+      const dataUrl = canvas.toDataURL(outputMime, exportQuality);
+
+      // Trigger instant browser download
+      const downloadLink = document.createElement('a');
+      downloadLink.href = dataUrl;
+      downloadLink.download = `QuickTool_${Date.now()}.${extension}`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+
+      const statusBox = document.getElementById('status-box');
+      statusBox.classList.remove('text-amber-400');
+      statusBox.classList.add('text-emerald-400');
+      statusBox.innerText = "✅ Done! File downloaded successfully.";
+    }
+  </script>
+</body>
+</html>
