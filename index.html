@@ -297,7 +297,11 @@
     let AdController = null;
     try {
       if (window.Adsgram) {
-        AdController = window.Adsgram.init({ blockId: "47374" });
+        AdController = window.Adsgram.init({ 
+  blockId: "int-0",
+  debug: true 
+});
+
       }
     } catch (e) {
       console.warn("Adsgram init bypassed:", e);
