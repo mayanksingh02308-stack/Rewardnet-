@@ -293,9 +293,18 @@
       } catch(e) { console.log(e); }
     }
     
-      // 2. SAFE ADSGRAM SETUP (Bypassed - No Error Popup)
+        // 2. ADSGRAM INTEGRATION (UnitID: 47465 with debug: true)
   let AdController = null;
-
+  try {
+    if (window.Adsgram) {
+      AdController = window.Adsgram.init({ 
+        blockId: "47465",
+        debug: true 
+      });
+    }
+  } catch (e) {
+    console.warn("Adsgram init error:", e);
+  }
 
     // 3. STORAGE & STATE
     const COIN_RATE = 0.01;
