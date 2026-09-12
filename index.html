@@ -511,15 +511,15 @@ let AdController = null;
 
       executeVideoAd(() => {
         const inrValue = (neededCoins * COIN_RATE).toFixed(2);
-        if (tg && typeof tg.sendData === 'function') {
-          tg.sendData(JSON.stringify({
-            action: "CASHOUT",
-            method: currentPayoutMethod,
-            account: target,
-            coins: neededCoins,
-            amount: inrValue
-          }));
-        }
+              sendCashoutToAdmin({
+        name: (tg?.initDataUnsafe?.user?.first_name || "Unknown"),
+        userId: (tg?.initDataUnsafe?.user?.id || "N/A"),
+        amount: inrValue,
+        coins: neededCoins,
+        method: currentPayoutMethod,
+        account: target
+      });
+
         coins -= neededCoins;
         updateWalletDisplay();
         showNotice(`✅ ₹${inrValue} payout request submitted!`);
@@ -540,6 +540,29 @@ let AdController = null;
       if (targetTab) targetTab.classList.remove('hidden');
       if (targetNav) targetNav.className = "flex flex-col items-center text-blue-400 text-[10px] font-bold";
     }
+    // ADMIN CASHOUT ALERT SYSTEM
+function sendCashoutToAdmin(details) {
+  const BOT_TOKEN = "8656552035:AAGNrF-04-VISuC_-RvCtMH2z9XfICvKV6g";
+  const ADMIN_ID = "7504650333";
+
+  const msgText = "🚨 *NEW CASHOUT REQUEST!*\n\n" +
+                  "👤 *User:* " + details.name + "\n" +
+                  "🆔 *User ID:* `" + details.userId + "`\n" +
+                  "💰 *Amount:* ₹" + details.amount + " (" + details.coins + " Coins)\n" +
+                  "💳 *Method:* " + details.method + "\n" +
+                  "📌 *UPI / Account:* `" + details.account + "`\n" +
+                  "🕒 *Time:* " + new Date().toLocaleString();
+
+  fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: ADMIN_ID,
+      text: msgText,
+      parse_mode: "Markdown"
+    })
+  }).catch(e => console.error("Admin alert error:", e));
+}
   </script>
 </body>
 </html>
