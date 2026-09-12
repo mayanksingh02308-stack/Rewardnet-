@@ -292,20 +292,10 @@
         }
       } catch(e) { console.log(e); }
     }
+    
+      // 2. SAFE ADSGRAM SETUP (Bypassed - No Error Popup)
+  let AdController = null;
 
-    // 2. SAFE ADSGRAM SETUP (Fail-safe wrapper)
-    let AdController = null;
-    try {
-      if (window.Adsgram) {
-        AdController = window.Adsgram.init({ 
-  blockId: "int-0",
-  debug: true 
-});
-
-      }
-    } catch (e) {
-      console.warn("Adsgram init bypassed:", e);
-    }
 
     // 3. STORAGE & STATE
     const COIN_RATE = 0.01;
